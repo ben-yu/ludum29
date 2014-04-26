@@ -1,56 +1,37 @@
 sphereBody = {}
 LockedControls = require './lockedcontrols'
-
-scene = new THREE.Scene()
-camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 )
-
-renderer = new THREE.WebGLRenderer { antialias: false }
-renderer.setSize( window.innerWidth, window.innerHeight )
-renderer.setViewport(0, 0, window.innerWidth, window.innerHeight)
-#renderer.shadowMapEnabled = true
-#renderer.shadowMapSoft = true
-document.body.appendChild( renderer.domElement )
-
+time = Date.now()
 init = () ->
     scene.fog = new THREE.Fog(0x000000,0,500)
-
-    ambient = new THREE.AmbientLight(0x111111)
+    renderer.setClearColor(scene.fog.color, 1)
+    ambient = new THREE.AmbientLight(0x555555)
     scene.add ambient
 
-    light = new THREE.SpotLight 0xffffff
-    light.position.set( 10, 30, 20 )
-    light.target.position.set( 0, 0, 0 )
-    light.castShadow = true
-
-    light.shadowCameraNear = 20
-    light.shadowCameraFar = 50
-    light.shadowCameraFov = 40
-
-    light.shadowMapBias = 0.1
-    light.shadowMapDarkness = 0.7
-    light.shadowMapWidth = 2*512
-    light.shadowMapHeight = 2*512
-    scene.add light
-
-    controls = new LockedControls(camera, sphereBody)
-    scene.add controls.getObject()
+    sun = new THREE.DirectionalLight( 0xffffff, 1.5, 30000 )
+    sun.position.set( -4000, 1200, 1800 )
+    sun.lookAt new THREE.Vector3()
+    scene.add sun
 
     pointerlock = require('./pointerlock')(controls)
 
     # floor
-    geometry = new THREE.PlaneGeometry( 300, 300, 50, 50 )
+    geometry = new THREE.PlaneGeometry( 1000, 1000, 30, 30 )
     geometry.applyMatrix( new THREE.Matrix4().makeRotationX( - Math.PI / 2 ) )
-
     #material = new THREE.MeshLambertMaterial( { color: 0xdddddd } )
     #THREE.ColorUtils.adjustHSV( material.color, 0, 0, 0.9 )
 
     mesh = new THREE.Mesh( geometry, new THREE.MeshNormalMaterial() )
     mesh.castShadow = true
     mesh.receiveShadow = true
+    mesh.position.y = -10
     scene.add( mesh )
 
+    cubegeometry = new THREE.CubeGeometry( 10, 10, 10 )
+    cubematerial = new THREE.MeshNormalMaterial()
+    cube = new THREE.Mesh( cubegeometry, cubematerial )
+    scene.add(cube)
+
 initCannon = () ->
-    world = new CANNON.World()
     world.quatNormalizeSkip = 0
     world.quatNormalizeFast = false
 
@@ -63,7 +44,7 @@ initCannon = () ->
     solver.tolerance = 0.1
     world.solver = new CANNON.SplitSolver solver
 
-    world.gravity.set(0,-20,0)
+    world.gravity.set(0,-200.8,0)
     world.broadphase = new CANNON.NaiveBroadphase()
 
     #Create a slippery material (friction coefficient = 0.0)
@@ -79,7 +60,7 @@ initCannon = () ->
     radius = 1.3
     sphereShape = new CANNON.Sphere(radius)
     sphereBody = new CANNON.RigidBody(mass,sphereShape,physicsMaterial)
-    sphereBody.position.set(0,5,0)
+    sphereBody.position.set(0,0,0)
     sphereBody.linearDamping = 0.9
     world.add(sphereBody)
 
@@ -87,6 +68,7 @@ initCannon = () ->
     groundShape = new CANNON.Plane()
     groundBody = new CANNON.RigidBody(0,groundShape,physicsMaterial)
     groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2)
+    groundBody.position.y = -10
     world.add(groundBody)
 
 onWindowResize = () ->
@@ -94,16 +76,31 @@ onWindowResize = () ->
     camera.updateProjectionMatrix()
     renderer.setSize( window.innerWidth, window.innerHeight )
 
+render = () ->
+    renderer.render( scene, camera )
+
 animate = () ->
-    requestAnimationFrame( animate )
-
-    render = () ->
-        renderer.render( scene, camera )
-
+    requestAnimationFrame animate
+    if controls.enabled
+        world.step(dt)
+    controls.update( Date.now() - time )
     render()
+    time = Date.now()
     return
 
-window.addEventListener( 'resize', onWindowResize, false )
+dt = 1/60
+world = new CANNON.World()
 initCannon()
+scene = new THREE.Scene()
+camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 10000 )
+#camera.lookAt(new THREE.Vector3(0,0,0))
+controls = new LockedControls(camera, sphereBody)
+scene.add controls.getObject()
+
+renderer = new THREE.WebGLRenderer()
+renderer.setSize( window.innerWidth, window.innerHeight )
+document.body.appendChild( renderer.domElement )
+window.addEventListener( 'resize', onWindowResize, false )
+
 init()
 animate()

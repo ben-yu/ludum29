@@ -1,38 +1,43 @@
 module.exports = class LockedControls
     velocityFactor : 0.2
     jumpVelocity : 20
-    pitchObject : new THREE.Object3D
-    yawObject : new THREE.Object3D
-    quat : new THREE.Quaternion
+    pitchObject : new THREE.Object3D()
+    yawObject : new THREE.Object3D()
+    quat : new THREE.Quaternion()
     moveForward : false
     moveBackward : false
     moveLeft : false
     moveRight : false
     canJump : false
-    contactNormal: new CANNON.Vec3
+    enabled : false
+    contactNormal: new CANNON.Vec3()
     upAxis : new CANNON.Vec3(0,1,0)
 
-    PI_2 : Math.PI / 2
+    PI_2 : Math.PI/2
 
-    constructor: (camera,cannonBody) ->
+    constructor: (camera,@cannonBody) ->
 
-        cannonBody.addEventListener 'collide', (e) =>
+        @pitchObject.add camera
+        @yawObject.position.y = 100
+        @yawObject.add @pitchObject
+
+        @cannonBody.addEventListener 'collide', (e) =>
             contact = e.contact
-            #console.log contact
-            #cannonBody.position.copy(@targetObject.position)
-            #cannonBody.quaternion.copy(@targetObject.quaternion)
+            console.log contact
+            #@cannonBody.position.copy(@targetObject.position)
+            #@cannonBody.quaternion.copy(@targetObject.quaternion)
             #@targetObject.position.add(new THREE.Vector3(contactNormal.x,contactNormal.y,contactNormal.z))
             if contact.bi.id is cannonBody.id
                 contact.ni.negate @contactNormal
             else
                 contact.ni.copy @contactNormal
             
-            if @contactNormal.dot(upAxis) < 0.5
+            if @contactNormal.dot(@upAxis) < 0.5
                 @canJump = true
-                #cannonBody.position.copy(@targetObject.position)
-                #cannonBody.quaternion.copy(@targetObject.quaternion)
+                #@cannonBody.position.copy(@targetObject.position)
+                #@cannonBody.quaternion.copy(@targetObject.quaternion)
                 #@targetObject.position.add(new THREE.Vector3(contactNormal.x,contactNormal.y,contactNormal.z))
-        @velocity = cannonBody.velocity
+        @velocity = @cannonBody.velocity
         @inputVelocity = new THREE.Vector3(0,0,0)
 
         document.addEventListener( 'mousemove', @onMouseMove, false )
@@ -51,12 +56,10 @@ module.exports = class LockedControls
         @yawObject.rotation.y -= movementX * 0.002
         @pitchObject.rotation.x -= movementY * 0.002
 
-        @pitchObject.rotation.x = Math.max( - @PI_2, Math.min( @PI_2, @pitchObject.rotation.x ) )
+        @pitchObject.rotation.x = Math.max(-@PI_2, Math.min(@PI_2, @pitchObject.rotation.x))
 
 
     onKeyDown: (event) =>
-        #console.log "Pressed!" + event.keyCode
-
         switch event.keyCode
             when 87 then @moveForward = true # w
             when 65 then @moveLeft = true # a
@@ -65,9 +68,7 @@ module.exports = class LockedControls
 
 
     onKeyUp: (event) =>
-
         switch event.keyCode
-
             when 87 then @moveForward = false # w
             when 65 then @moveLeft = false # a
             when 83 then @moveBackward = false # s
@@ -82,23 +83,25 @@ module.exports = class LockedControls
 
         delta *= 0.1
 
-        inputVelocity.set(0,0,0)
+        @inputVelocity.set(0,0,0)
 
-        if moveForward
-            inputVelocity.z = -@velocityFactor * delta
-        if moveBackward
-            inputVelocity.z = @velocityFactor * delta
-        if moveLeft
-            inputVelocity.x = -@velocityFactor * delta
-        if moveRight
-            inputVelocity.x = @velocityFactor * delta
+        if @moveForward
+            @inputVelocity.z = -@velocityFactor * delta
+        if @moveBackward
+            @inputVelocity.z = @velocityFactor * delta
+        if @moveLeft
+            @inputVelocity.x = -@velocityFactor * delta
+        if @moveRight
+            @inputVelocity.x = @velocityFactor * delta
         
+        #console.log @inputVelocity
         #Convert velocity to world coordinates
-        quat.setFromEuler({x:@pitchObject.rotation.x, y:@yawObject.rotation.y, z:0},"XYZ")
-        quat.multiplyVector3(inputVelocity)
+        #@quat.setFromEuler(new THREE.Euler(@pitchObject.rotation.x, @yawObject.rotation.y, 0,'XYZ')
+        #@inputVelocity.applyQuaternion(@quat)
+        @inputVelocity.applyEuler(new THREE.Euler(@pitchObject.rotation.x, @yawObject.rotation.y, 0,'ZYX'))
 
         #Add to the object
-        velocity.x += inputVelocity.x
-        velocity.z += inputVelocity.z
-
-        cannonBody.position.copy(@yawObject.position)
+        #console.log @quat
+        @velocity.x += @inputVelocity.x
+        @velocity.z += @inputVelocity.z
+        @cannonBody.position.copy(@yawObject.position)
