@@ -1,0 +1,10 @@
+doctype html
+head
+	link(rel='stylesheet', href='css/app.css')
+body
+	div#game(style='position:absolute')
+		#blocker
+			#instructions
+			#progress(style='font-size:40px') Click to Start
+	script(src='js/vendor.js')
+	script(src="js/app.js",defer,onload="require('scripts/game');")

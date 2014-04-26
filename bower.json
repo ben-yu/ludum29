@@ -1,0 +1,26 @@
+{
+  "name": "ludum29",
+  "version": "0.0.0",
+  "authors": [
+    "Benjamin Yu <benjamin.sichit.yu@gmail.com>"
+  ],
+  "description": "Sharks",
+  "keywords": [
+    "ludum"
+  ],
+  "license": "MIT",
+  "homepage": "ben-yu.com",
+  "private": true,
+  "dependencies": {
+    "three.js": "*",
+    "threex.cannonjs":"*"
+  },
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "vendor",
+    "test",
+    "tests"
+  ]
+}
