@@ -1,6 +1,0 @@
-PWD /Users/benjaminyu/ludum29/app/scripts
-INPUT /usr/local/texlive/2013basic/texmf.cnf
-INPUT /usr/local/texlive/2013basic/texmf-dist/web2c/texmf.cnf
-INPUT /usr/local/texlive/2013basic/texmf-var/web2c/pdftex/pdflatex.fmt
-INPUT /Users/benjaminyu/ludum29/app/scripts/lockedcontrols.coffee
-OUTPUT Output/lockedcontrols.log
