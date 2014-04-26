@@ -1,4 +1,4 @@
-module.exports = PointerLock = (container,renderer,controls) =>
+module.exports = PointerLock = (controls) =>
     # Pointer Lock - http://www.html5rocks.com/en/tutorials/pointerlock/intro/
     havePointerLock = 'pointerLockElement' of document or
         'mozPointerLockElement' of document or
@@ -22,7 +22,6 @@ module.exports = PointerLock = (container,renderer,controls) =>
                 controls.cursor_x = WIDTH/2
                 controls.cursor_y = HEIGHT/2
                 blocker.style.display = 'none'
-                cursorOverlay.style.display = true
         
             else
 
@@ -30,8 +29,6 @@ module.exports = PointerLock = (container,renderer,controls) =>
                 blocker.style.display = '-webkit-box'
                 blocker.style.display = '-moz-box'
                 blocker.style.display = 'box'
-                cursorOverlay.style.display = false
-
                 instructions.style.display = ''
 
         pointerlockerror =  (event) ->
@@ -49,7 +46,6 @@ module.exports = PointerLock = (container,renderer,controls) =>
         instructions.addEventListener( 'click',  (event) ->
 
             instructions.style.display = 'none'
-            cursorOverlay.style.display = false
 
             # Ask the browser to lock the pointer
             element.requestPointerLock = element.requestPointerLock or element.mozRequestPointerLock or element.webkitRequestPointerLock
@@ -77,5 +73,3 @@ module.exports = PointerLock = (container,renderer,controls) =>
 
     else
         instructions.innerHTML = 'Your browser doesn\'t seem to support Pointer Lock API'
-
-    container.appendChild(renderer.domElement)

@@ -2,9 +2,8 @@ doctype html
 head
 	link(rel='stylesheet', href='css/app.css')
 body
-	div#game(style='position:absolute')
+	div#game(style='position:absolute;width:100%;height:100%')
 		#blocker
-			#instructions
-			#progress(style='font-size:40px') Click to Start
+			#instructions(style='font-size:40px;color: white;padding-top:25%;padding-left:40%') Click to Start
 	script(src='js/vendor.js')
 	script(src="js/app.js",defer,onload="require('scripts/game');")
