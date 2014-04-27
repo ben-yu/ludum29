@@ -18,6 +18,9 @@ module.exports = class LockedControls
 
     constructor: (camera,@cannonBody) ->
 
+        @chirp = new Howl
+            urls: ['sounds/dolphins.mp3']
+
         @pitchObject.add camera
         @yawObject.position.y = 100
         @yawObject.add @pitchObject
@@ -31,13 +34,9 @@ module.exports = class LockedControls
                 contact.ni.copy @contactNormal
 
             if @contactNormal.dot(@upAxis) > 0.5
-                console.log @canJump
                 @canJump = true
         @velocity = @cannonBody.velocity
         @inputVelocity = new THREE.Vector3(0,0,0)
-
-        @chirp = new Howl
-            urls: ['sounds/dolphins.mp3']
 
         document.addEventListener( 'mousemove', @onMouseMove, false )
         document.addEventListener( 'keydown', @onKeyDown, false )
@@ -65,7 +64,6 @@ module.exports = class LockedControls
             when 83 then @moveBackward = true # s
             when 68 then @moveRight = true # s
             when 32
-                console.log 'JUMP!'
                 if @canJump
                     @chirp.play()
                     @velocity.y = @jumpVelocity
@@ -116,5 +114,7 @@ module.exports = class LockedControls
         #Add to the object
         #console.log @quat
         @velocity.x += @inputVelocity.x
+        if @canJump
+            @velocity.y += @inputVelocity.y
         @velocity.z += @inputVelocity.z
         @cannonBody.position.copy(@yawObject.position)

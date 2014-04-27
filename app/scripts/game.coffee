@@ -3,9 +3,15 @@ waterLayer = [{},{}]
 LockedControls = require './lockedcontrols'
 time = Date.now()
 
+waterHeight = -90
+playedSplash = false
+
 sound = new Howl
     urls: ['sounds/beachwaves.mp3']
     loop: true
+
+splash = new Howl
+    urls: ['sounds/splash.mp3']
 
 init = () ->
     scene.fog = new THREE.Fog(0x000000,0,500)
@@ -35,7 +41,7 @@ init = () ->
     waterNormals = new THREE.ImageUtils.loadTexture('img/waternormals.jpg')
     waterNormals.wrapS = waterNormals.wrapT = THREE.RepeatWrapping
 
-    createWater = (type,alpha,waterColor,xRotation) ->
+    createWater = (type,alpha,waterColor,position,xRotation) ->
         # Create the water effect
         waterLayer[type] = new THREE.Water renderer, camera, scene,
             textureWidth: 256
@@ -50,11 +56,11 @@ init = () ->
         aMeshMirror = new THREE.Mesh(new THREE.PlaneGeometry(50000, 50000, 100, 100),waterLayer[type].material)
         aMeshMirror.add(waterLayer[type])
         aMeshMirror.rotation.x = xRotation
-        aMeshMirror.position.y = -105
+        aMeshMirror.position.y = position
         return aMeshMirror
 
-    surface = createWater(0,1.0,0x001e0f,- Math.PI * 0.5)
-    underwater = createWater(1,0.85,0x001e0f,- Math.PI * 1.5)
+    surface = createWater(0,1.0,0x001e0f, waterHeight, - Math.PI * 0.5)
+    underwater = createWater(1,0.85,0x001e0f, waterHeight + 1, - Math.PI * 1.5)
     scene.add(surface)
     scene.add(underwater)
 
@@ -82,11 +88,11 @@ init = () ->
 
     scene.add(aSkybox)
 
-    targetGeom = new THREE.SphereGeometry(10)
-    targetMat = new THREE.MeshNormalMaterial()
-    target = new THREE.Mesh(targetGeom, targetMat)
-    target.position.y = 100
-    scene.add(target)
+    #targetGeom = new THREE.TorusGeometry(100,10,20,20)
+    #targetMat = new THREE.MeshNormalMaterial()
+    #target = new THREE.Mesh(targetGeom, targetMat)
+    #target.position.y = 100
+    #scene.add(target)
 
     sound.play()
 
@@ -121,6 +127,8 @@ initCannon = () ->
     sphereBody = new CANNON.RigidBody(mass,sphereShape,physicsMaterial)
     sphereBody.position.set(0,0,0)
     sphereBody.linearDamping = 0.9
+    sphereBody.collisionFilterGroup = 1
+    sphereBody.collisionFilterMask =  1
     world.add(sphereBody)
 
     # Create a plane
@@ -129,6 +137,34 @@ initCannon = () ->
     groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2)
     groundBody.position.y = -500
     world.add(groundBody)
+
+spawnRandomTarget = () ->
+    targetGeom = new THREE.TorusGeometry(100,10,20,20)
+    targetGeom.computeBoundingBox()
+    targetMat = new THREE.MeshNormalMaterial()
+    target = new THREE.Mesh(targetGeom, targetMat)
+    target.position = new THREE.Vector3(Math.random() * 2000 - 1000,Math.random() * -200,Math.random() * 2000 - 1000)
+    scene.add(target)
+    physicsMaterial = new CANNON.Material("slipperyMaterial")
+    boundBox = new CANNON.Box(new CANNON.Vec3(targetGeom.boundingBox.max.x/2,targetGeom.boundingBox.max.y/2,targetGeom.boundingBox.max.z/2))
+    targetBody = new CANNON.RigidBody(-1,boundBox,physicsMaterial)
+    targetBody.position.set(target.position.x,target.position.y,target.position.z)
+    targetBody.collisionFilterGroup = 1
+    targetBody.collisionFilterMask =  1
+    world.add(targetBody)
+
+    targetBody.addEventListener 'collide', (e) ->
+        contact = e.contact
+        console.log 'RING COLLISION!'
+        console.log e
+        
+        if contact.bj.id is sphereBody.id
+            scene.remove target
+            # TODO - Removal is crashing CANNON
+            targetBody.collisionFilterGroup = 2
+            spawnRandomTarget()
+
+
 
 
 onWindowResize = () ->
@@ -146,8 +182,7 @@ camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight
 controls = new LockedControls(camera, sphereBody)
 scene.add controls.getObject()
 
-#_.extend(sphereBody, Backbone.Events)
-console.log sphereBody
+spawnRandomTarget()
 
 renderer = new THREE.WebGLRenderer()
 renderer.setSize( window.innerWidth, window.innerHeight )
@@ -164,18 +199,20 @@ render = () ->
 animate = () ->
     if controls.enabled
         world.step(dt)
+
     controls.update( Date.now() - time )
     render()
     time = Date.now()
     requestAnimationFrame animate
-    if inAir and sphereBody.position.y < 0
+    if sphereBody.position.y < waterHeight and inAir
+        inAir = false
         controls.canJump = true
         world.gravity.set(0,-98.1,0)
-        sound.fade(1.0,0.5,2.0)
-    else
+        splash.play()
+    else if sphereBody.position.y > waterHeight and not inAir
+        inAir = true
         controls.canJump = false
-        world.gravity.set(0,-980.1,0)
-        sound.fade(0.5,1.0,2.0)
+        world.gravity.set(0,-500.1,0)
     return
 
 init()
