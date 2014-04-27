@@ -1,9 +1,17 @@
 doctype html
 head
 	link(rel='stylesheet', href='css/app.css')
+	link(href='http://fonts.googleapis.com/css?family=Roboto',rel='stylesheet')
 body
 	div#game(style='position:absolute;width:100%;height:100%')
+		#score(style='font-size:25px;color: white;display:none;z-index=10')
+			| 0
 		#blocker
-			#instructions(style='font-size:40px;color: white;padding-top:25%;padding-left:40%') Click to Start
+			#title(style='font-size:60px;color: white;margin-top:100px;padding-left:10%;font-family: Roboto, sans-serif;')
+				| Dolphins Beneath The Surface
+			#instructions(style='font-size:30px;color:white;margin-top:20%;padding-left:40%;white-space:pre;font-family: Roboto, sans-serif;')
+				| Alternate between A/D to Swim.
+				| Click to Start
+				| Grab as many Rings as you can!
 	script(src='js/vendor.js')
 	script(src="js/app.js",defer,onload="require('scripts/game');")

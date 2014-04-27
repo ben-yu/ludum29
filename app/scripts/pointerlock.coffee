@@ -9,6 +9,7 @@ module.exports = PointerLock = (controls) =>
 
     blocker = document.getElementById 'blocker'
     instructions = document.getElementById 'instructions'
+    score = document.getElementById 'score'
 
     if havePointerLock
 
@@ -17,20 +18,18 @@ module.exports = PointerLock = (controls) =>
         pointerlockchange =  (event) =>
 
             if document.pointerLockElement is element or document.mozPointerLockElement is element or document.webkitPointerLockElement is element
-
                 controls.enabled = true
                 controls.cursor_x = WIDTH/2
                 controls.cursor_y = HEIGHT/2
                 blocker.style.display = 'none'
-        
+                score.style.display = '-webkit-box'
             else
-
                 controls.enabled = false
-                blocker.style.display = '-webkit-box'
-                blocker.style.display = '-moz-box'
-                blocker.style.display = 'box'
+                blocker.style.display = 'inline'
+                blocker.style.display = 'inline'
+                blocker.style.display = 'inline'
                 instructions.style.display = ''
-
+                score.style.display = 'none'
         pointerlockerror =  (event) ->
             instructions.style.display = ''
 

@@ -2,8 +2,10 @@ sphereBody = {}
 waterLayer = [{},{}]
 LockedControls = require './lockedcontrols'
 time = Date.now()
+score = 0
 
 waterHeight = -90
+waterBedHeight = -500
 playedSplash = false
 
 sound = new Howl
@@ -12,6 +14,9 @@ sound = new Howl
 
 splash = new Howl
     urls: ['sounds/splash.mp3']
+
+chirp = new Howl
+    urls: ['sounds/dolphins.mp3']
 
 init = () ->
     scene.fog = new THREE.Fog(0x000000,0,500)
@@ -35,7 +40,7 @@ init = () ->
     mesh = new THREE.Mesh( geometry, material )
     mesh.castShadow = true
     mesh.receiveShadow = true
-    mesh.position.y = -500
+    mesh.position.y = waterBedHeight
     scene.add( mesh )
 
     waterNormals = new THREE.ImageUtils.loadTexture('img/waternormals.jpg')
@@ -85,14 +90,7 @@ init = () ->
         side: THREE.BackSide
 
     aSkybox = new THREE.Mesh( new THREE.CubeGeometry(1000000, 1000000, 1000000),aSkyBoxMaterial)
-
     scene.add(aSkybox)
-
-    #targetGeom = new THREE.TorusGeometry(100,10,20,20)
-    #targetMat = new THREE.MeshNormalMaterial()
-    #target = new THREE.Mesh(targetGeom, targetMat)
-    #target.position.y = 100
-    #scene.add(target)
 
     sound.play()
 
@@ -135,18 +133,24 @@ initCannon = () ->
     groundShape = new CANNON.Plane()
     groundBody = new CANNON.RigidBody(0,groundShape,physicsMaterial)
     groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2)
-    groundBody.position.y = -500
+    groundBody.position.y = waterBedHeight
+
+    groundShape2 = new CANNON.Plane()
+    groundBody2 = new CANNON.RigidBody(0,groundShape,physicsMaterial)
+    groundBody2.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2)
+    groundBody2.position.y = waterBedHeight - 50
     world.add(groundBody)
 
-spawnRandomTarget = () ->
+spawnTarget = (pos) ->
     targetGeom = new THREE.TorusGeometry(100,10,20,20)
     targetGeom.computeBoundingBox()
     targetMat = new THREE.MeshNormalMaterial()
     target = new THREE.Mesh(targetGeom, targetMat)
-    target.position = new THREE.Vector3(Math.random() * 2000 - 1000,Math.random() * -200,Math.random() * 2000 - 1000)
+    target.position = pos
+    target.rotation.y = Math.random() * Math.PI
     scene.add(target)
     physicsMaterial = new CANNON.Material("slipperyMaterial")
-    boundBox = new CANNON.Box(new CANNON.Vec3(targetGeom.boundingBox.max.x/2,targetGeom.boundingBox.max.y/2,targetGeom.boundingBox.max.z/2))
+    boundBox = new CANNON.Box(new CANNON.Vec3(targetGeom.boundingBox.max.x,targetGeom.boundingBox.max.y,targetGeom.boundingBox.max.z))
     targetBody = new CANNON.RigidBody(-1,boundBox,physicsMaterial)
     targetBody.position.set(target.position.x,target.position.y,target.position.z)
     targetBody.collisionFilterGroup = 1
@@ -162,9 +166,9 @@ spawnRandomTarget = () ->
             scene.remove target
             # TODO - Removal is crashing CANNON
             targetBody.collisionFilterGroup = 2
-            spawnRandomTarget()
-
-
+            score += 1
+            document.getElementById('score').innerHTML = score
+            spawnTarget(new THREE.Vector3(Math.random() * 2000 - 1000,Math.random() * 50,Math.random() * 2000 - 1000))
 
 
 onWindowResize = () ->
@@ -172,6 +176,7 @@ onWindowResize = () ->
     camera.updateProjectionMatrix()
     renderer.setSize( window.innerWidth, window.innerHeight )
     render()
+
 inAir = true
 dt = 1/60
 world = new CANNON.World()
@@ -182,19 +187,33 @@ camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight
 controls = new LockedControls(camera, sphereBody)
 scene.add controls.getObject()
 
-spawnRandomTarget()
+spawnTarget(new THREE.Vector3(-500,20,-500))
 
 renderer = new THREE.WebGLRenderer()
 renderer.setSize( window.innerWidth, window.innerHeight )
 document.body.appendChild( renderer.domElement )
 window.addEventListener( 'resize', onWindowResize, false )
 
+composer = new THREE.EffectComposer( renderer )
+composer.addPass( new THREE.RenderPass( scene, camera ) )
+
+blueEffect = new THREE.ShaderPass(THREE.ColorifyShader)
+blueEffect.uniforms[ 'color' ].value = new THREE.Color 0x6699FF
+blueEffect.enabled = false
+composer.addPass( blueEffect )
+
+effect = new THREE.ShaderPass( THREE.CopyShader)
+effect.renderToScreen = true
+composer.addPass( effect )
+
 render = () ->
     waterLayer[0].material.uniforms.time.value += 1.0/60.0
     waterLayer[0].render()
     #waterLayer[1].material.uniforms.time.value += 1.0/60.0
     #waterLayer[1].render()
+    renderer.autoClear = false
     renderer.render(scene,camera)
+    composer.render()
 
 animate = () ->
     if controls.enabled
@@ -207,12 +226,15 @@ animate = () ->
     if sphereBody.position.y < waterHeight and inAir
         inAir = false
         controls.canJump = true
+        blueEffect.enabled = true
         world.gravity.set(0,-98.1,0)
         splash.play()
     else if sphereBody.position.y > waterHeight and not inAir
         inAir = true
         controls.canJump = false
+        blueEffect.enabled = false
         world.gravity.set(0,-500.1,0)
+        chirp.play()
     return
 
 init()

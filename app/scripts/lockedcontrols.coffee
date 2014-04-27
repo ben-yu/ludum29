@@ -18,9 +18,6 @@ module.exports = class LockedControls
 
     constructor: (camera,@cannonBody) ->
 
-        @chirp = new Howl
-            urls: ['sounds/dolphins.mp3']
-
         @pitchObject.add camera
         @yawObject.position.y = 100
         @yawObject.add @pitchObject
