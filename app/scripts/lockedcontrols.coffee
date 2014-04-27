@@ -36,6 +36,9 @@ module.exports = class LockedControls
         @velocity = @cannonBody.velocity
         @inputVelocity = new THREE.Vector3(0,0,0)
 
+        @chirp = new Howl
+            urls: ['sounds/dolphins.mp3']
+
         document.addEventListener( 'mousemove', @onMouseMove, false )
         document.addEventListener( 'keydown', @onKeyDown, false )
         document.addEventListener( 'keyup', @onKeyUp, false )
@@ -64,6 +67,7 @@ module.exports = class LockedControls
             when 32
                 console.log 'JUMP!'
                 if @canJump
+                    @chirp.play()
                     @velocity.y = @jumpVelocity
                 @canJump = false
 
@@ -101,7 +105,8 @@ module.exports = class LockedControls
         
         if @momentum <= 0
             @momentum += 1
-        else @momentum = 0
+        else
+            @momentum = 0
         #console.log @inputVelocity
         #Convert velocity to world coordinates
         #@quat.setFromEuler(new THREE.Euler(@pitchObject.rotation.x, @yawObject.rotation.y, 0,'XYZ')

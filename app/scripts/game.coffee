@@ -3,6 +3,9 @@ waterLayer = [{},{}]
 LockedControls = require './lockedcontrols'
 time = Date.now()
 
+sound = new Howl
+    urls: ['sounds/beachwaves.mp3']
+    loop: true
 
 init = () ->
     scene.fog = new THREE.Fog(0x000000,0,500)
@@ -85,6 +88,8 @@ init = () ->
     target.position.y = 100
     scene.add(target)
 
+    sound.play()
+
 initCannon = () ->
     world.quatNormalizeSkip = 0
     world.quatNormalizeFast = false
@@ -141,7 +146,7 @@ camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight
 controls = new LockedControls(camera, sphereBody)
 scene.add controls.getObject()
 
-_.extend(sphereBody, Backbone.Events)
+#_.extend(sphereBody, Backbone.Events)
 console.log sphereBody
 
 renderer = new THREE.WebGLRenderer()
@@ -166,9 +171,11 @@ animate = () ->
     if inAir and sphereBody.position.y < 0
         controls.canJump = true
         world.gravity.set(0,-98.1,0)
+        sound.fade(1.0,0.5,2.0)
     else
         controls.canJump = false
         world.gravity.set(0,-980.1,0)
+        sound.fade(0.5,1.0,2.0)
     return
 
 init()
