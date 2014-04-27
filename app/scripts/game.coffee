@@ -1,7 +1,9 @@
 sphereBody = {}
-waterLayer = {}
+waterLayer = [{},{}]
 LockedControls = require './lockedcontrols'
 time = Date.now()
+
+
 init = () ->
     scene.fog = new THREE.Fog(0x000000,0,500)
     renderer.setClearColor(scene.fog.color, 1)
@@ -30,22 +32,28 @@ init = () ->
     waterNormals = new THREE.ImageUtils.loadTexture('img/waternormals.jpg')
     waterNormals.wrapS = waterNormals.wrapT = THREE.RepeatWrapping
 
-    # Create the water effect
-    waterLayer = new THREE.Water renderer, camera, scene,
-        textureWidth: 256
-        textureHeight: 256
-        waterNormals: waterNormals
-        alpha:  1.0
-        sunDirection: sun.position.normalize()
-        sunColor: 0xffffff
-        waterColor: 0x001e0f
-        betaVersion: 0
-    
-    aMeshMirror = new THREE.Mesh(new THREE.PlaneGeometry(50000, 50000, 100, 100),waterLayer.material)
-    aMeshMirror.add(waterLayer)
-    aMeshMirror.rotation.x = - Math.PI * 0.5
-    aMeshMirror.position.y = -100
-    scene.add(aMeshMirror)
+    createWater = (type,alpha,waterColor,xRotation) ->
+        # Create the water effect
+        waterLayer[type] = new THREE.Water renderer, camera, scene,
+            textureWidth: 256
+            textureHeight: 256
+            waterNormals: waterNormals
+            alpha:  alpha
+            sunDirection: sun.position.normalize()
+            sunColor: 0xffffff
+            waterColor: waterColor
+            betaVersion: 0
+        
+        aMeshMirror = new THREE.Mesh(new THREE.PlaneGeometry(50000, 50000, 100, 100),waterLayer[type].material)
+        aMeshMirror.add(waterLayer[type])
+        aMeshMirror.rotation.x = xRotation
+        aMeshMirror.position.y = -105
+        return aMeshMirror
+
+    surface = createWater(0,1.0,0x001e0f,- Math.PI * 0.5)
+    underwater = createWater(1,0.85,0x001e0f,- Math.PI * 1.5)
+    scene.add(surface)
+    scene.add(underwater)
 
     aCubeMap = THREE.ImageUtils.loadTextureCube([
         'img/px.jpg',
@@ -117,12 +125,13 @@ initCannon = () ->
     groundBody.position.y = -500
     world.add(groundBody)
 
+
 onWindowResize = () ->
     camera.aspect = window.innerWidth / window.innerHeight
     camera.updateProjectionMatrix()
     renderer.setSize( window.innerWidth, window.innerHeight )
     render()
-
+inAir = true
 dt = 1/60
 world = new CANNON.World()
 initCannon()
@@ -132,14 +141,19 @@ camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight
 controls = new LockedControls(camera, sphereBody)
 scene.add controls.getObject()
 
+_.extend(sphereBody, Backbone.Events)
+console.log sphereBody
+
 renderer = new THREE.WebGLRenderer()
 renderer.setSize( window.innerWidth, window.innerHeight )
 document.body.appendChild( renderer.domElement )
 window.addEventListener( 'resize', onWindowResize, false )
 
 render = () ->
-    waterLayer.material.uniforms.time.value += 1.0/60.0
-    waterLayer.render()
+    waterLayer[0].material.uniforms.time.value += 1.0/60.0
+    waterLayer[0].render()
+    #waterLayer[1].material.uniforms.time.value += 1.0/60.0
+    #waterLayer[1].render()
     renderer.render(scene,camera)
 
 animate = () ->
@@ -149,6 +163,12 @@ animate = () ->
     render()
     time = Date.now()
     requestAnimationFrame animate
+    if inAir and sphereBody.position.y < 0
+        controls.canJump = true
+        world.gravity.set(0,-98.1,0)
+    else
+        controls.canJump = false
+        world.gravity.set(0,-980.1,0)
     return
 
 init()

@@ -9,6 +9,7 @@ exports.config =
         'js/vendor.js': /^vendor/
       order:
         before: [
+          'vendor/underscore/underscore.js',
           'vendor/three.js/three.min.js'
         ]
     stylesheets:

@@ -1,6 +1,7 @@
 module.exports = class LockedControls
+    momentum : 0
     velocityFactor : 0.2
-    jumpVelocity : 20
+    jumpVelocity : 2000
     pitchObject : new THREE.Object3D()
     yawObject : new THREE.Object3D()
     quat : new THREE.Quaternion()
@@ -23,20 +24,15 @@ module.exports = class LockedControls
 
         @cannonBody.addEventListener 'collide', (e) =>
             contact = e.contact
-            console.log contact
-            #@cannonBody.position.copy(@targetObject.position)
-            #@cannonBody.quaternion.copy(@targetObject.quaternion)
-            #@targetObject.position.add(new THREE.Vector3(contactNormal.x,contactNormal.y,contactNormal.z))
-            if contact.bi.id is cannonBody.id
+            
+            if contact.bi.id is @cannonBody.id
                 contact.ni.negate @contactNormal
             else
                 contact.ni.copy @contactNormal
-            
-            if @contactNormal.dot(@upAxis) < 0.5
+
+            if @contactNormal.dot(@upAxis) > 0.5
+                console.log @canJump
                 @canJump = true
-                #@cannonBody.position.copy(@targetObject.position)
-                #@cannonBody.quaternion.copy(@targetObject.quaternion)
-                #@targetObject.position.add(new THREE.Vector3(contactNormal.x,contactNormal.y,contactNormal.z))
         @velocity = @cannonBody.velocity
         @inputVelocity = new THREE.Vector3(0,0,0)
 
@@ -65,14 +61,25 @@ module.exports = class LockedControls
             when 65 then @moveLeft = true # a
             when 83 then @moveBackward = true # s
             when 68 then @moveRight = true # s
+            when 32
+                console.log 'JUMP!'
+                if @canJump
+                    @velocity.y = @jumpVelocity
+                @canJump = false
 
 
     onKeyUp: (event) =>
         switch event.keyCode
             when 87 then @moveForward = false # w
-            when 65 then @moveLeft = false # a
+            when 65 # a
+                if not @moveLeft
+                    @moveLeft = true
+                    @momentum -= 10
             when 83 then @moveBackward = false # s
-            when 68 then @moveRight = false # s
+            when 68
+                if @moveLeft
+                    @moveLeft = false
+                    @momentum -= 10
 
     getObject: () =>
         return @yawObject
@@ -85,15 +92,16 @@ module.exports = class LockedControls
 
         @inputVelocity.set(0,0,0)
 
-        if @moveForward
-            @inputVelocity.z = -@velocityFactor * delta
-        if @moveBackward
-            @inputVelocity.z = @velocityFactor * delta
+
+        @inputVelocity.z = @momentum * delta
         if @moveLeft
             @inputVelocity.x = -@velocityFactor * delta
         if @moveRight
             @inputVelocity.x = @velocityFactor * delta
         
+        if @momentum <= 0
+            @momentum += 1
+        else @momentum = 0
         #console.log @inputVelocity
         #Convert velocity to world coordinates
         #@quat.setFromEuler(new THREE.Euler(@pitchObject.rotation.x, @yawObject.rotation.y, 0,'XYZ')
