@@ -1,1 +1,546 @@
-(function(){"use strict";var e="undefined"!=typeof window?window:global;if("function"!=typeof e.require){var t={},i={},r=function(e,t){return{}.hasOwnProperty.call(e,t)},n=function(e,t){var i,r,n=[];i=/^\.\.?(\/|$)/.test(t)?[e,t].join("/").split("/"):t.split("/");for(var o=0,a=i.length;a>o;o++)r=i[o],".."===r?n.pop():"."!==r&&""!==r&&n.push(r);return n.join("/")},o=function(e){return e.split("/").slice(0,-1).join("/")},a=function(t){return function(i){var r=o(t),a=n(r,i);return e.require(a)}},s=function(e,t){var r={id:e,exports:{}};t(r.exports,a(e),r);var n=i[e]=r.exports;return n},h=function(e){var o=n(e,".");if(r(i,o))return i[o];if(r(t,o))return s(o,t[o]);var a=n(o,"./index");if(r(i,a))return i[a];if(r(t,a))return s(a,t[a]);throw Error('Cannot find module "'+e+'"')},l=function(e,i){if("object"==typeof e)for(var n in e)r(e,n)&&(t[n]=e[n]);else t[e]=i};e.require=h,e.require.define=l,e.require.register=l,e.require.brunch=!0}})(),window.require.register("scripts/game",function(e,t){var i,r,n,o,a,s,h,l,c,u,p,d,f,m,E,v,g,y,T,R,x,w,H,b,_,M,S;x={},M=[{},{}],i=t("./lockedcontrols"),H=Date.now(),y=0,_=-90,b=-500,m=!1,T=new Howl({urls:["sounds/beachwaves.mp3"],loop:!0}),w=new Howl({urls:["sounds/splash.mp3"]}),a=new Howl({urls:["sounds/dolphins.mp3"]}),p=function(){var e,i,r,n,a,s,l,c,u,p,d,f,m,E;return g.fog=new THREE.Fog(0,0,500),v.setClearColor(g.fog.color,1),a=new THREE.AmbientLight(5592405),g.add(a),d=new THREE.DirectionalLight(16777045,1),d.position.set(-600,300,600),d.lookAt(new THREE.Vector3),g.add(d),p=t("./pointerlock")(h),l=new THREE.PlaneGeometry(5e4,5e4,30,30),l.applyMatrix((new THREE.Matrix4).makeRotationX(-Math.PI/2)),c=new THREE.MeshLambertMaterial({color:14540253}),u=new THREE.Mesh(l,c),u.castShadow=!0,u.receiveShadow=!0,u.position.y=b,g.add(u),E=new THREE.ImageUtils.loadTexture("img/waternormals.jpg"),E.wrapS=E.wrapT=THREE.RepeatWrapping,s=function(e,t,i,r,n){var a;return M[e]=new THREE.Water(v,o,g,{textureWidth:256,textureHeight:256,waterNormals:E,alpha:t,sunDirection:d.position.normalize(),sunColor:16777215,waterColor:i,betaVersion:0}),a=new THREE.Mesh(new THREE.PlaneGeometry(5e4,5e4,100,100),M[e].material),a.add(M[e]),a.rotation.x=n,a.position.y=r,a},f=s(0,1,7695,_,.5*-Math.PI),m=s(1,.85,7695,_+1,1.5*-Math.PI),g.add(f),g.add(m),e=THREE.ImageUtils.loadTextureCube(["img/px.jpg","img/nx.jpg","img/py.jpg","img/ny.jpg","img/pz.jpg","img/nz.jpg"]),e.format=THREE.RGBFormat,i=THREE.ShaderLib.cube,i.uniforms.tCube.value=e,r=new THREE.ShaderMaterial({fragmentShader:i.fragmentShader,vertexShader:i.vertexShader,uniforms:i.uniforms,depthWrite:!1,side:THREE.BackSide}),n=new THREE.Mesh(new THREE.CubeGeometry(1e6,1e6,1e6),r),g.add(n),T.play()},d=function(){var e,t,i,r,n,o,a,s,h,l;return S.quatNormalizeSkip=0,S.quatNormalizeFast=!1,h=new CANNON.GSSolver,S.defaultContactMaterial.contactEquationStiffness=1e9,S.defaultContactMaterial.contactEquationRegularizationTime=4,h.iterations=7,h.tolerance=.1,S.solver=new CANNON.SplitSolver(h),S.gravity.set(0,-98.1,0),S.broadphase=new CANNON.NaiveBroadphase,a=new CANNON.Material("slipperyMaterial"),o=new CANNON.ContactMaterial(a,a,0,.3),S.addContactMaterial(o),n=5,s=1.3,l=new CANNON.Sphere(s),x=new CANNON.RigidBody(n,l,a),x.position.set(0,0,0),x.linearDamping=.9,x.collisionFilterGroup=1,x.collisionFilterMask=1,S.add(x),i=new CANNON.Plane,e=new CANNON.RigidBody(0,i,a),e.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2),e.position.y=b,r=new CANNON.Plane,t=new CANNON.RigidBody(0,i,a),t.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2),t.position.y=b-50,S.add(e)},R=function(e){var t,i,r,n,o,a;return o=new THREE.TorusGeometry(100,10,20,20),o.computeBoundingBox(),a=new THREE.MeshNormalMaterial,r=new THREE.Mesh(o,a),r.position=e,r.rotation.y=Math.random()*Math.PI,g.add(r),i=new CANNON.Material("slipperyMaterial"),t=new CANNON.Box(new CANNON.Vec3(o.boundingBox.max.x,o.boundingBox.max.y,o.boundingBox.max.z)),n=new CANNON.RigidBody(-1,t,i),n.position.set(r.position.x,r.position.y,r.position.z),n.collisionFilterGroup=1,n.collisionFilterMask=1,S.add(n),n.addEventListener("collide",function(e){var t;return t=e.contact,console.log("RING COLLISION!"),console.log(e),t.bj.id===x.id?(g.remove(r),n.collisionFilterGroup=2,y+=1,document.getElementById("score").innerHTML=y,R(new THREE.Vector3(2e3*Math.random()-1e3,50*Math.random(),2e3*Math.random()-1e3))):void 0})},f=function(){return o.aspect=window.innerWidth/window.innerHeight,o.updateProjectionMatrix(),v.setSize(window.innerWidth,window.innerHeight),E()},u=!0,l=1/60,S=new CANNON.World,d(),g=new THREE.Scene,o=new THREE.PerspectiveCamera(90,window.innerWidth/window.innerHeight,.1,1e7),h=new i(o,x),g.add(h.getObject()),R(new THREE.Vector3(-500,20,-500)),v=new THREE.WebGLRenderer,v.setSize(window.innerWidth,window.innerHeight),document.body.appendChild(v.domElement),window.addEventListener("resize",f,!1),s=new THREE.EffectComposer(v),s.addPass(new THREE.RenderPass(g,o)),n=new THREE.ShaderPass(THREE.ColorifyShader),n.uniforms.color.value=new THREE.Color(6724095),n.enabled=!1,s.addPass(n),c=new THREE.ShaderPass(THREE.CopyShader),c.renderToScreen=!0,s.addPass(c),E=function(){return M[0].material.uniforms.time.value+=1/60,M[0].render(),v.autoClear=!1,v.render(g,o),s.render()},r=function(){h.enabled&&S.step(l),h.update(Date.now()-H),E(),H=Date.now(),requestAnimationFrame(r),_>x.position.y&&u?(u=!1,h.canJump=!0,n.enabled=!0,S.gravity.set(0,-98.1,0),w.play()):x.position.y>_&&!u&&(u=!0,h.canJump=!1,n.enabled=!1,S.gravity.set(0,-500.1,0),a.play())},p(),r()}),window.require.register("scripts/lockedcontrols",function(e,t,i){var r,n=function(e,t){return function(){return e.apply(t,arguments)}};i.exports=r=function(){function e(e,t){this.cannonBody=t,this.update=n(this.update,this),this.getObject=n(this.getObject,this),this.onKeyUp=n(this.onKeyUp,this),this.onKeyDown=n(this.onKeyDown,this),this.onMouseMove=n(this.onMouseMove,this),this.pitchObject.add(e),this.yawObject.position.y=100,this.yawObject.add(this.pitchObject),this.cannonBody.addEventListener("collide",function(e){return function(t){var i;return i=t.contact,i.bi.id===e.cannonBody.id?i.ni.negate(e.contactNormal):i.ni.copy(e.contactNormal),e.contactNormal.dot(e.upAxis)>.5?e.canJump=!0:void 0}}(this)),this.velocity=this.cannonBody.velocity,this.inputVelocity=new THREE.Vector3(0,0,0),document.addEventListener("mousemove",this.onMouseMove,!1),document.addEventListener("keydown",this.onKeyDown,!1),document.addEventListener("keyup",this.onKeyUp,!1)}return e.prototype.momentum=0,e.prototype.velocityFactor=.2,e.prototype.jumpVelocity=2e3,e.prototype.pitchObject=new THREE.Object3D,e.prototype.yawObject=new THREE.Object3D,e.prototype.quat=new THREE.Quaternion,e.prototype.moveForward=!1,e.prototype.moveBackward=!1,e.prototype.moveLeft=!1,e.prototype.moveRight=!1,e.prototype.canJump=!1,e.prototype.enabled=!1,e.prototype.contactNormal=new CANNON.Vec3,e.prototype.upAxis=new CANNON.Vec3(0,1,0),e.prototype.PI_2=Math.PI/2,e.prototype.onMouseMove=function(e){var t,i;if(this.enabled!==!1)return t=e.movementX||e.mozMovementX||e.webkitMovementX||0,i=e.movementY||e.mozMovementY||e.webkitMovementY||0,this.yawObject.rotation.y-=.002*t,this.pitchObject.rotation.x-=.002*i,this.pitchObject.rotation.x=Math.max(-this.PI_2,Math.min(this.PI_2,this.pitchObject.rotation.x))},e.prototype.onKeyDown=function(e){switch(e.keyCode){case 87:return this.moveForward=!0;case 65:return this.moveLeft=!0;case 83:return this.moveBackward=!0;case 68:return this.moveRight=!0;case 32:return this.canJump&&(this.chirp.play(),this.velocity.y=this.jumpVelocity),this.canJump=!1}},e.prototype.onKeyUp=function(e){switch(e.keyCode){case 87:return this.moveForward=!1;case 65:if(!this.moveLeft)return this.moveLeft=!0,this.momentum-=10;break;case 83:return this.moveBackward=!1;case 68:if(this.moveLeft)return this.moveLeft=!1,this.momentum-=10}},e.prototype.getObject=function(){return this.yawObject},e.prototype.update=function(e){return this.enabled!==!1?(e*=.1,this.inputVelocity.set(0,0,0),this.inputVelocity.z=this.momentum*e,this.moveLeft&&(this.inputVelocity.x=-this.velocityFactor*e),this.moveRight&&(this.inputVelocity.x=this.velocityFactor*e),0>=this.momentum?this.momentum+=1:this.momentum=0,this.inputVelocity.applyEuler(new THREE.Euler(this.pitchObject.rotation.x,this.yawObject.rotation.y,0,"ZYX")),this.velocity.x+=this.inputVelocity.x,this.canJump&&(this.velocity.y+=this.inputVelocity.y),this.velocity.z+=this.inputVelocity.z,this.cannonBody.position.copy(this.yawObject.position)):void 0},e}()}),window.require.register("scripts/pointerlock",function(e,t,i){var r;i.exports=r=function(){return function(e){var t,i,r,n,o,a,s,h,l;return o="pointerLockElement"in document||"mozPointerLockElement"in document||"webkitPointerLockElement"in document,i=window.innerWidth,t=window.innerHeight,r=document.getElementById("blocker"),a=document.getElementById("instructions"),l=document.getElementById("score"),o?(n=document.body,s=function(){return document.pointerLockElement===n||document.mozPointerLockElement===n||document.webkitPointerLockElement===n?(e.enabled=!0,e.cursor_x=i/2,e.cursor_y=t/2,r.style.display="none",l.style.display="-webkit-box"):(e.enabled=!1,r.style.display="inline",r.style.display="inline",r.style.display="inline",a.style.display="",l.style.display="none")},h=function(){return a.style.display=""},document.addEventListener("pointerlockchange",s,!1),document.addEventListener("mozpointerlockchange",s,!1),document.addEventListener("webkitpointerlockchange",s,!1),document.addEventListener("pointerlockerror",h,!1),document.addEventListener("mozpointerlockerror",h,!1),document.addEventListener("webkitpointerlockerror",h,!1),a.addEventListener("click",function(){var e;return a.style.display="none",n.requestPointerLock=n.requestPointerLock||n.mozRequestPointerLock||n.webkitRequestPointerLock,/Firefox/i.test(navigator.userAgent)?(e=function(){return(document.fullscreenElement===n||document.mozFullscreenElement===n||document.mozFullScreenElement===n)&&(document.removeEventListener("fullscreenchange",e),document.removeEventListener("mozfullscreenchange",e)),n.requestPointerLock()},document.addEventListener("fullscreenchange",e,!1),document.addEventListener("mozfullscreenchange",e,!1),n.requestFullscreen=n.requestFullscreen||n.mozRequestFullscreen||n.mozRequestFullScreen||n.webkitRequestFullscreen,n.requestFullscreen()):n.requestPointerLock()},!1)):a.innerHTML="Your browser doesn't seem to support Pointer Lock API"}}(this)});
+(function(/*! Brunch !*/) {
+  'use strict';
+
+  var globals = typeof window !== 'undefined' ? window : global;
+  if (typeof globals.require === 'function') return;
+
+  var modules = {};
+  var cache = {};
+
+  var has = function(object, name) {
+    return ({}).hasOwnProperty.call(object, name);
+  };
+
+  var expand = function(root, name) {
+    var results = [], parts, part;
+    if (/^\.\.?(\/|$)/.test(name)) {
+      parts = [root, name].join('/').split('/');
+    } else {
+      parts = name.split('/');
+    }
+    for (var i = 0, length = parts.length; i < length; i++) {
+      part = parts[i];
+      if (part === '..') {
+        results.pop();
+      } else if (part !== '.' && part !== '') {
+        results.push(part);
+      }
+    }
+    return results.join('/');
+  };
+
+  var dirname = function(path) {
+    return path.split('/').slice(0, -1).join('/');
+  };
+
+  var localRequire = function(path) {
+    return function(name) {
+      var dir = dirname(path);
+      var absolute = expand(dir, name);
+      return globals.require(absolute);
+    };
+  };
+
+  var initModule = function(name, definition) {
+    var module = {id: name, exports: {}};
+    definition(module.exports, localRequire(name), module);
+    var exports = cache[name] = module.exports;
+    return exports;
+  };
+
+  var require = function(name) {
+    var path = expand(name, '.');
+
+    if (has(cache, path)) return cache[path];
+    if (has(modules, path)) return initModule(path, modules[path]);
+
+    var dirIndex = expand(path, './index');
+    if (has(cache, dirIndex)) return cache[dirIndex];
+    if (has(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
+
+    throw new Error('Cannot find module "' + name + '"');
+  };
+
+  var define = function(bundle, fn) {
+    if (typeof bundle === 'object') {
+      for (var key in bundle) {
+        if (has(bundle, key)) {
+          modules[key] = bundle[key];
+        }
+      }
+    } else {
+      modules[bundle] = fn;
+    }
+  };
+
+  globals.require = require;
+  globals.require.define = define;
+  globals.require.register = define;
+  globals.require.brunch = true;
+})();
+
+window.require.register("scripts/game", function(exports, require, module) {
+  var LockedControls, animate, blueEffect, camera, chirp, composer, controls, dt, effect, inAir, init, initCannon, onWindowResize, playedSplash, render, renderer, scene, score, sound, spawnTarget, sphereBody, splash, time, waterBedHeight, waterHeight, waterLayer, world;
+
+  sphereBody = {};
+
+  waterLayer = [{}, {}];
+
+  LockedControls = require('./lockedcontrols');
+
+  time = Date.now();
+
+  score = 0;
+
+  waterHeight = -90;
+
+  waterBedHeight = -500;
+
+  playedSplash = false;
+
+  sound = new Howl({
+    urls: ['sounds/beachwaves.mp3'],
+    loop: true
+  });
+
+  splash = new Howl({
+    urls: ['sounds/splash.mp3']
+  });
+
+  chirp = new Howl({
+    urls: ['sounds/dolphins.mp3']
+  });
+
+  init = function() {
+    var aCubeMap, aShader, aSkyBoxMaterial, aSkybox, ambient, createWater, geometry, material, mesh, pointerlock, sun, surface, underwater, waterNormals;
+    scene.fog = new THREE.Fog(0x000000, 0, 500);
+    renderer.setClearColor(scene.fog.color, 1);
+    ambient = new THREE.AmbientLight(0x555555);
+    scene.add(ambient);
+    sun = new THREE.DirectionalLight(0xffff55, 1);
+    sun.position.set(-600, 300, 600);
+    sun.lookAt(new THREE.Vector3());
+    scene.add(sun);
+    pointerlock = require('./pointerlock')(controls);
+    geometry = new THREE.PlaneGeometry(50000, 50000, 30, 30);
+    geometry.applyMatrix(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
+    material = new THREE.MeshLambertMaterial({
+      color: 0xdddddd
+    });
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.position.y = waterBedHeight;
+    scene.add(mesh);
+    waterNormals = new THREE.ImageUtils.loadTexture('img/waternormals.jpg');
+    waterNormals.wrapS = waterNormals.wrapT = THREE.RepeatWrapping;
+    createWater = function(type, alpha, waterColor, position, xRotation) {
+      var aMeshMirror;
+      waterLayer[type] = new THREE.Water(renderer, camera, scene, {
+        textureWidth: 256,
+        textureHeight: 256,
+        waterNormals: waterNormals,
+        alpha: alpha,
+        sunDirection: sun.position.normalize(),
+        sunColor: 0xffffff,
+        waterColor: waterColor,
+        betaVersion: 0
+      });
+      aMeshMirror = new THREE.Mesh(new THREE.PlaneGeometry(50000, 50000, 100, 100), waterLayer[type].material);
+      aMeshMirror.add(waterLayer[type]);
+      aMeshMirror.rotation.x = xRotation;
+      aMeshMirror.position.y = position;
+      return aMeshMirror;
+    };
+    surface = createWater(0, 1.0, 0x001e0f, waterHeight, -Math.PI * 0.5);
+    underwater = createWater(1, 0.85, 0x001e0f, waterHeight + 1, -Math.PI * 1.5);
+    scene.add(surface);
+    scene.add(underwater);
+    aCubeMap = THREE.ImageUtils.loadTextureCube(['img/px.jpg', 'img/nx.jpg', 'img/py.jpg', 'img/ny.jpg', 'img/pz.jpg', 'img/nz.jpg']);
+    aCubeMap.format = THREE.RGBFormat;
+    aShader = THREE.ShaderLib['cube'];
+    aShader.uniforms['tCube'].value = aCubeMap;
+    aSkyBoxMaterial = new THREE.ShaderMaterial({
+      fragmentShader: aShader.fragmentShader,
+      vertexShader: aShader.vertexShader,
+      uniforms: aShader.uniforms,
+      depthWrite: false,
+      side: THREE.BackSide
+    });
+    aSkybox = new THREE.Mesh(new THREE.CubeGeometry(1000000, 1000000, 1000000), aSkyBoxMaterial);
+    scene.add(aSkybox);
+    return sound.play();
+  };
+
+  initCannon = function() {
+    var groundBody, groundBody2, groundShape, groundShape2, mass, physicsContactMaterial, physicsMaterial, radius, solver, sphereShape;
+    world.quatNormalizeSkip = 0;
+    world.quatNormalizeFast = false;
+    solver = new CANNON.GSSolver();
+    world.defaultContactMaterial.contactEquationStiffness = 1e9;
+    world.defaultContactMaterial.contactEquationRegularizationTime = 4;
+    solver.iterations = 7;
+    solver.tolerance = 0.1;
+    world.solver = new CANNON.SplitSolver(solver);
+    world.gravity.set(0, -98.1, 0);
+    world.broadphase = new CANNON.NaiveBroadphase();
+    physicsMaterial = new CANNON.Material("slipperyMaterial");
+    physicsContactMaterial = new CANNON.ContactMaterial(physicsMaterial, physicsMaterial, 0.0, 0.3);
+    world.addContactMaterial(physicsContactMaterial);
+    mass = 5;
+    radius = 1.3;
+    sphereShape = new CANNON.Sphere(radius);
+    sphereBody = new CANNON.RigidBody(mass, sphereShape, physicsMaterial);
+    sphereBody.position.set(0, 0, 0);
+    sphereBody.linearDamping = 0.9;
+    sphereBody.collisionFilterGroup = 1;
+    sphereBody.collisionFilterMask = 1;
+    world.add(sphereBody);
+    groundShape = new CANNON.Plane();
+    groundBody = new CANNON.RigidBody(0, groundShape, physicsMaterial);
+    groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+    groundBody.position.y = waterBedHeight;
+    groundShape2 = new CANNON.Plane();
+    groundBody2 = new CANNON.RigidBody(0, groundShape, physicsMaterial);
+    groundBody2.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+    groundBody2.position.y = waterBedHeight - 50;
+    return world.add(groundBody);
+  };
+
+  spawnTarget = function(pos) {
+    var boundBox, physicsMaterial, target, targetBody, targetGeom, targetMat;
+    targetGeom = new THREE.TorusGeometry(100, 10, 20, 20);
+    targetGeom.computeBoundingBox();
+    targetMat = new THREE.MeshNormalMaterial();
+    target = new THREE.Mesh(targetGeom, targetMat);
+    target.position = pos;
+    target.rotation.y = Math.random() * Math.PI;
+    scene.add(target);
+    physicsMaterial = new CANNON.Material("slipperyMaterial");
+    boundBox = new CANNON.Box(new CANNON.Vec3(targetGeom.boundingBox.max.x, targetGeom.boundingBox.max.y, targetGeom.boundingBox.max.z));
+    targetBody = new CANNON.RigidBody(-1, boundBox, physicsMaterial);
+    targetBody.position.set(target.position.x, target.position.y, target.position.z);
+    targetBody.collisionFilterGroup = 1;
+    targetBody.collisionFilterMask = 1;
+    world.add(targetBody);
+    return targetBody.addEventListener('collide', function(e) {
+      var contact;
+      contact = e.contact;
+      console.log('RING COLLISION!');
+      console.log(e);
+      if (contact.bj.id === sphereBody.id) {
+        scene.remove(target);
+        targetBody.collisionFilterGroup = 2;
+        score += 1;
+        document.getElementById('score').innerHTML = score;
+        return spawnTarget(new THREE.Vector3(Math.random() * 2000 - 1000, Math.random() * 50, Math.random() * 2000 - 1000));
+      }
+    });
+  };
+
+  onWindowResize = function() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    return render();
+  };
+
+  inAir = true;
+
+  dt = 1 / 60;
+
+  world = new CANNON.World();
+
+  initCannon();
+
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 10000000);
+
+  controls = new LockedControls(camera, sphereBody);
+
+  scene.add(controls.getObject());
+
+  spawnTarget(new THREE.Vector3(-500, 20, -500));
+
+  renderer = new THREE.WebGLRenderer();
+
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  document.body.appendChild(renderer.domElement);
+
+  window.addEventListener('resize', onWindowResize, false);
+
+  composer = new THREE.EffectComposer(renderer);
+
+  composer.addPass(new THREE.RenderPass(scene, camera));
+
+  blueEffect = new THREE.ShaderPass(THREE.ColorifyShader);
+
+  blueEffect.uniforms['color'].value = new THREE.Color(0x6699FF);
+
+  blueEffect.enabled = false;
+
+  composer.addPass(blueEffect);
+
+  effect = new THREE.ShaderPass(THREE.CopyShader);
+
+  effect.renderToScreen = true;
+
+  composer.addPass(effect);
+
+  render = function() {
+    waterLayer[0].material.uniforms.time.value += 1.0 / 60.0;
+    waterLayer[0].render();
+    renderer.autoClear = false;
+    renderer.render(scene, camera);
+    return composer.render();
+  };
+
+  animate = function() {
+    if (controls.enabled) {
+      world.step(dt);
+    }
+    controls.update(Date.now() - time);
+    render();
+    time = Date.now();
+    requestAnimationFrame(animate);
+    if (sphereBody.position.y < waterHeight && inAir) {
+      inAir = false;
+      controls.canJump = true;
+      blueEffect.enabled = true;
+      world.gravity.set(0, -98.1, 0);
+      splash.play();
+    } else if (sphereBody.position.y > waterHeight && !inAir) {
+      inAir = true;
+      controls.canJump = false;
+      blueEffect.enabled = false;
+      world.gravity.set(0, -500.1, 0);
+      chirp.play();
+    }
+  };
+
+  init();
+
+  animate();
+  
+});
+window.require.register("scripts/lockedcontrols", function(exports, require, module) {
+  var LockedControls,
+    bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+
+  module.exports = LockedControls = (function() {
+    LockedControls.prototype.momentum = 0;
+
+    LockedControls.prototype.velocityFactor = 0.2;
+
+    LockedControls.prototype.jumpVelocity = 2000;
+
+    LockedControls.prototype.pitchObject = new THREE.Object3D();
+
+    LockedControls.prototype.yawObject = new THREE.Object3D();
+
+    LockedControls.prototype.quat = new THREE.Quaternion();
+
+    LockedControls.prototype.moveForward = false;
+
+    LockedControls.prototype.moveBackward = false;
+
+    LockedControls.prototype.moveLeft = false;
+
+    LockedControls.prototype.moveRight = false;
+
+    LockedControls.prototype.canJump = false;
+
+    LockedControls.prototype.enabled = false;
+
+    LockedControls.prototype.contactNormal = new CANNON.Vec3();
+
+    LockedControls.prototype.upAxis = new CANNON.Vec3(0, 1, 0);
+
+    LockedControls.prototype.PI_2 = Math.PI / 2;
+
+    function LockedControls(camera, cannonBody) {
+      this.cannonBody = cannonBody;
+      this.update = bind(this.update, this);
+      this.getObject = bind(this.getObject, this);
+      this.onKeyUp = bind(this.onKeyUp, this);
+      this.onKeyDown = bind(this.onKeyDown, this);
+      this.onMouseMove = bind(this.onMouseMove, this);
+      this.pitchObject.add(camera);
+      this.yawObject.position.y = 100;
+      this.yawObject.add(this.pitchObject);
+      this.cannonBody.addEventListener('collide', (function(_this) {
+        return function(e) {
+          var contact;
+          contact = e.contact;
+          if (contact.bi.id === _this.cannonBody.id) {
+            contact.ni.negate(_this.contactNormal);
+          } else {
+            contact.ni.copy(_this.contactNormal);
+          }
+          if (_this.contactNormal.dot(_this.upAxis) > 0.5) {
+            return _this.canJump = true;
+          }
+        };
+      })(this));
+      this.velocity = this.cannonBody.velocity;
+      this.inputVelocity = new THREE.Vector3(0, 0, 0);
+      document.addEventListener('mousemove', this.onMouseMove, false);
+      document.addEventListener('keydown', this.onKeyDown, false);
+      document.addEventListener('keyup', this.onKeyUp, false);
+    }
+
+    LockedControls.prototype.onMouseMove = function(event) {
+      var movementX, movementY;
+      if (this.enabled === false) {
+        return;
+      }
+      movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+      movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
+      this.yawObject.rotation.y -= movementX * 0.002;
+      this.pitchObject.rotation.x -= movementY * 0.002;
+      return this.pitchObject.rotation.x = Math.max(-this.PI_2, Math.min(this.PI_2, this.pitchObject.rotation.x));
+    };
+
+    LockedControls.prototype.onKeyDown = function(event) {
+      switch (event.keyCode) {
+        case 87:
+          return this.moveForward = true;
+        case 65:
+          return this.moveLeft = true;
+        case 83:
+          return this.moveBackward = true;
+        case 68:
+          return this.moveRight = true;
+        case 32:
+          if (this.canJump) {
+            this.chirp.play();
+            this.velocity.y = this.jumpVelocity;
+          }
+          return this.canJump = false;
+      }
+    };
+
+    LockedControls.prototype.onKeyUp = function(event) {
+      switch (event.keyCode) {
+        case 87:
+          return this.moveForward = false;
+        case 65:
+          if (!this.moveLeft) {
+            this.moveLeft = true;
+            return this.momentum -= 10;
+          }
+          break;
+        case 83:
+          return this.moveBackward = false;
+        case 68:
+          if (this.moveLeft) {
+            this.moveLeft = false;
+            return this.momentum -= 10;
+          }
+      }
+    };
+
+    LockedControls.prototype.getObject = function() {
+      return this.yawObject;
+    };
+
+    LockedControls.prototype.update = function(delta) {
+      if (this.enabled === false) {
+        return;
+      }
+      delta *= 0.1;
+      this.inputVelocity.set(0, 0, 0);
+      this.inputVelocity.z = this.momentum * delta;
+      if (this.moveLeft) {
+        this.inputVelocity.x = -this.velocityFactor * delta;
+      }
+      if (this.moveRight) {
+        this.inputVelocity.x = this.velocityFactor * delta;
+      }
+      if (this.momentum <= 0) {
+        this.momentum += 1;
+      } else {
+        this.momentum = 0;
+      }
+      this.inputVelocity.applyEuler(new THREE.Euler(this.pitchObject.rotation.x, this.yawObject.rotation.y, 0, 'ZYX'));
+      this.velocity.x += this.inputVelocity.x;
+      if (this.canJump) {
+        this.velocity.y += this.inputVelocity.y;
+      }
+      this.velocity.z += this.inputVelocity.z;
+      return this.cannonBody.position.copy(this.yawObject.position);
+    };
+
+    return LockedControls;
+
+  })();
+  
+});
+window.require.register("scripts/pointerlock", function(exports, require, module) {
+  var PointerLock;
+
+  module.exports = PointerLock = (function(_this) {
+    return function(controls) {
+      var HEIGHT, WIDTH, blocker, element, havePointerLock, instructions, pointerlockchange, pointerlockerror, score;
+      havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
+      WIDTH = window.innerWidth;
+      HEIGHT = window.innerHeight;
+      blocker = document.getElementById('blocker');
+      instructions = document.getElementById('instructions');
+      score = document.getElementById('score');
+      if (havePointerLock) {
+        element = document.body;
+        pointerlockchange = function(event) {
+          if (document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element) {
+            controls.enabled = true;
+            controls.cursor_x = WIDTH / 2;
+            controls.cursor_y = HEIGHT / 2;
+            blocker.style.display = 'none';
+            return score.style.display = '-webkit-box';
+          } else {
+            controls.enabled = false;
+            blocker.style.display = 'inline';
+            blocker.style.display = 'inline';
+            blocker.style.display = 'inline';
+            instructions.style.display = '';
+            return score.style.display = 'none';
+          }
+        };
+        pointerlockerror = function(event) {
+          return instructions.style.display = '';
+        };
+        document.addEventListener('pointerlockchange', pointerlockchange, false);
+        document.addEventListener('mozpointerlockchange', pointerlockchange, false);
+        document.addEventListener('webkitpointerlockchange', pointerlockchange, false);
+        document.addEventListener('pointerlockerror', pointerlockerror, false);
+        document.addEventListener('mozpointerlockerror', pointerlockerror, false);
+        document.addEventListener('webkitpointerlockerror', pointerlockerror, false);
+        return instructions.addEventListener('click', function(event) {
+          var fullscreenchange;
+          instructions.style.display = 'none';
+          element.requestPointerLock = element.requestPointerLock || element.mozRequestPointerLock || element.webkitRequestPointerLock;
+          if (/Firefox/i.test(navigator.userAgent)) {
+            fullscreenchange = function(event) {
+              if (document.fullscreenElement === element || document.mozFullscreenElement === element || document.mozFullScreenElement === element) {
+                document.removeEventListener('fullscreenchange', fullscreenchange);
+                document.removeEventListener('mozfullscreenchange', fullscreenchange);
+              }
+              return element.requestPointerLock();
+            };
+            document.addEventListener('fullscreenchange', fullscreenchange, false);
+            document.addEventListener('mozfullscreenchange', fullscreenchange, false);
+            element.requestFullscreen = element.requestFullscreen || element.mozRequestFullscreen || element.mozRequestFullScreen || element.webkitRequestFullscreen;
+            return element.requestFullscreen();
+          } else {
+            return element.requestPointerLock();
+          }
+        }, false);
+      } else {
+        return instructions.innerHTML = 'Your browser doesn\'t seem to support Pointer Lock API';
+      }
+    };
+  })(this);
+  
+});
